@@ -13,3 +13,8 @@ tasks {
         gradleVersion = "8.11.1"
     }
 }
+
+java {
+  sourceCompatibility = JavaVersion.VERSION_23
+  targetCompatibility = JavaVersion.VERSION_23
+}
