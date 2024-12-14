@@ -1,5 +1,6 @@
 fun main() {
-    data class Robot(val pos: Point, val velocity:Point)
+    data class Robot(val pos: Point, val velocity: Point)
+
     fun parseInput(input: List<String>): List<Robot> {
         val digits = """-?\d+""".toRegex()
         return input.map {
@@ -8,20 +9,18 @@ fun main() {
         }
     }
 
-    fun calcPositions(robots: List<Robot>, seconds: Int, gridSize: Point): List<Robot> = robots.map {
-        Robot(
-            Point(
-                (it.pos.x + it.velocity.x * seconds).mod(gridSize.x),
-                (it.pos.y + it.velocity.y * seconds).mod(gridSize.y)
-            ), it.velocity
+    fun calcPositions(robots: List<Robot>, seconds: Int, gridSize: Point): List<Point> = robots.map {
+        Point(
+            (it.pos.x + it.velocity.x * seconds).mod(gridSize.x),
+            (it.pos.y + it.velocity.y * seconds).mod(gridSize.y)
         )
     }
 
-    fun printGrid(gridSize: Point, positions: List<Robot>) {
+    fun printGrid(gridSize: Point, positions: List<Point>) {
         for (y in 0..<gridSize.y) {
             for (x in 0..<gridSize.x) {
-                if (positions.any { it.pos == Point(x, y) }) {
-                    print(positions.count { it.pos == Point(x, y) })
+                if (positions.any { it == Point(x, y) }) {
+                    print(positions.count { it == Point(x, y) })
                 } else {
                     print(".")
                 }
@@ -37,34 +36,30 @@ fun main() {
 
         printGrid(gridSize, positions)
 
-        return positions.count { (pos, _) -> pos.x in 0 ..< gridSize.x/2 && pos.y in 0 ..< gridSize.y/2 }.toLong() *
-            positions.count { (pos, _) -> pos.x in gridSize.x/2 + 1 ..< gridSize.x && pos.y in 0 ..< gridSize.y/2 } *
-            positions.count { (pos, _) -> pos.x in 0 ..< gridSize.x/2 && pos.y in gridSize.y/2 + 1 ..< gridSize.y } *
-            positions.count { (pos, _) -> pos.x in gridSize.x/2 + 1 ..< gridSize.x && pos.y in gridSize.y/2 + 1 ..< gridSize.y }
+        return positions.count { pos -> pos.x < gridSize.x / 2 && pos.y < gridSize.y / 2 }.toLong() *
+            positions.count { pos -> pos.x > gridSize.x / 2 && pos.y < gridSize.y / 2 } *
+            positions.count { pos -> pos.x < gridSize.x / 2 && pos.y > gridSize.y / 2 } *
+            positions.count { pos -> pos.x > gridSize.x / 2 && pos.y > gridSize.y / 2 }
     }
 
     fun part2(input: List<String>): Int {
         var i = 0
-        while (true) {
+        w@ while (true) {
             val gridSize = Point(101, 103)
             val positions = calcPositions(parseInput(input), i, gridSize)
 
-            val middleColumn = positions.filter { it.pos.x == gridSize.x/2 }.map { it.pos.y }.toSortedSet()
-            var maxconsecutive = 0
-            var currentconsecutive = 0
-            for (y in 0..<gridSize.y) {
-                if (middleColumn.contains(y)) {
-                    currentconsecutive++
-                } else {
-                    if (currentconsecutive > maxconsecutive) {
-                        maxconsecutive = currentconsecutive
+            for (p in positions) {
+                val peak = buildList {
+                    add(p)
+                    repeat(4) {
+                        add(Point(p.x - it, p.y + it))
+                        add(Point(p.x + it, p.y + it))
                     }
-                    currentconsecutive = 0
                 }
-            }
-            if (maxconsecutive>10) {
-                printGrid(gridSize, positions)
-                break
+                if (peak.all(positions::contains)) {
+                    printGrid(gridSize, positions)
+                    break@w
+                }
             }
             i++
         }
